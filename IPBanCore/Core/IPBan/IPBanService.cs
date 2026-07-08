@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#define USE_TEMP_FILE_FOR_FIREWALL_TASKS
+
 #region Imports
 
 using System;
@@ -42,7 +44,7 @@ namespace DigitalRuby.IPBanCore
     /// not be initialized until the first RunCycle is called.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]
-    public partial class IPBanService : IIPBanService, IIsWhitelisted
+    public partial class IPBanService : IIPBanService, IIsWhitelisted, IIPBanConfig
     {
         /// <summary>
         /// Constructor
@@ -151,11 +153,12 @@ namespace DigitalRuby.IPBanCore
         }
 
         /// <summary>
-        /// Write a new config file
+        /// Write a new config file. Virtual so tests can intercept the call without touching
+        /// the on-disk config.
         /// </summary>
         /// <param name="xml">Xml of the new config file</param>
         /// <returns>Task</returns>
-        public async Task WriteConfigAsync(string xml)
+        public virtual async Task WriteConfigAsync(string xml)
         {
             // Ensure valid xml before writing the file
             XmlDocument doc = new();
@@ -318,6 +321,11 @@ namespace DigitalRuby.IPBanCore
         }
 
         /// <summary>
+        /// Direct access to the database
+        /// </summary>
+        public IPBanDB DB => ipDB;
+
+        /// <summary>
         /// Get a list of ip address and failed login attempts
         /// </summary>
         public IEnumerable<IPBanDB.IPAddressEntry> FailedLoginAttempts
@@ -379,7 +387,7 @@ namespace DigitalRuby.IPBanCore
         }
 
         /// <inheritdoc />
-        public Task RunFirewallTask<T>(Func<T, CancellationToken, Task> action, T state, string name)
+        public Task RunFirewallTask<T>(Func<T, IIPBanFirewall, CancellationToken, Task> action, T state, string name)
         {
             if (!IsRunning || CancelToken.IsCancellationRequested)
             {
@@ -387,14 +395,27 @@ namespace DigitalRuby.IPBanCore
             }
             else if (MultiThreaded)
             {
-                var task = new FirewallTask(action, state, typeof(T), name, CancelToken);
+
+#if USE_TEMP_FILE_FOR_FIREWALL_TASKS
+
+                var tempFile = new TempFile();
+                JsonSerializationHelper.SerializeToFile(state, tempFile);
+                var task = new FirewallTask(action, Firewall, tempFile, typeof(T), name, CancelToken);
+
+
+#else
+
+                var task = new FirewallTask(action, Firewall, state, typeof(T), name, CancelToken);
+     
+#endif
+
                 Logger.Debug("Queued firewall task {0}", name);
                 firewallTasks.Enqueue(task);
                 return Task.CompletedTask;
             }
             else
             {
-                return action.Invoke(state, CancelToken);
+                return action.Invoke(state, Firewall, CancelToken);
             }
         }
 
@@ -468,6 +489,13 @@ namespace DigitalRuby.IPBanCore
             ExtensionMethods.FileWriteAllTextWithRetry(configFileOverridePath, configFileOverrideText);
             T service = IPBanService.CreateService<T>();
             service.ConfigFilePath = configFilePath;
+            service.ConfigReaderWriter.UseFile = false;
+            service.ConfigReaderWriter.GlobalConfigString = configFileText;
+            service.ConfigOverrideReaderWriter.UseFile = false;
+            service.ConfigOverrideReaderWriter.GlobalConfigString = configFileOverrideText;
+            service.LocalIPAddressString = "127.0.0.1";
+            service.RemoteIPAddressString = "127.0.0.1";
+            service.OtherIPAddressesString = "127.0.0.1";
             service.MultiThreaded = false;
             service.ManualCycle = true;
             service.DnsList = null; // too slow for tests, turn off
@@ -532,7 +560,6 @@ namespace DigitalRuby.IPBanCore
                     Directory.Delete(appDataCache, true);
                 }
                 service.Firewall.Truncate();
-                service.RunCycleAsync().Sync();
                 service.IPBanDelegate = null;
                 service.Dispose();
                 IPBanService.CleanupIPBanTestFiles();

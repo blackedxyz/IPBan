@@ -42,6 +42,7 @@ namespace DigitalRuby.IPBanCore
     /// <summary>
     /// Configuration for ip ban app
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Configuration XML models are runtime-deserialized and preserved by IPBanCore usage patterns.")]
     public sealed class IPBanConfig : IIsWhitelisted
     {
         /// <summary>
@@ -134,6 +135,7 @@ namespace DigitalRuby.IPBanCore
         private readonly string processToRunOnUnban = string.Empty;
         private readonly bool useDefaultBannedIPAddressHandler;
         private readonly string getUrlUpdate = string.Empty;
+        private readonly string getUrlUpdateSha256 = string.Empty;
         private readonly string getUrlStart = string.Empty;
         private readonly string getUrlStop = string.Empty;
         private readonly string getUrlConfig = string.Empty;
@@ -238,6 +240,7 @@ namespace DigitalRuby.IPBanCore
             TryGetConfig<int>("UserNameWhitelistMinimumEditDistance", ref userNameWhitelistMaximumEditDistance);
             TryGetConfig<int>("FailedLoginAttemptsBeforeBanUserNameWhitelist", ref failedLoginAttemptsBeforeBanUserNameWhitelist);
             TryGetConfig<string>("GetUrlUpdate", ref getUrlUpdate);
+            TryGetConfig<string>("GetUrlUpdateSha256", ref getUrlUpdateSha256);
             TryGetConfig<string>("GetUrlStart", ref getUrlStart);
             TryGetConfig<string>("GetUrlStop", ref getUrlStop);
             TryGetConfig<string>("GetUrlConfig", ref getUrlConfig);
@@ -260,8 +263,11 @@ namespace DigitalRuby.IPBanCore
         {
             if (string.IsNullOrWhiteSpace(key))
             {
-                // bad key
-                Logger.Warn("Ignoring null/empty key");
+                if (logMissing)
+                {
+                    // bad key
+                    Logger.Debug("Ignoring null/empty key");
+                }
                 return null;
             }
 
@@ -269,7 +275,7 @@ namespace DigitalRuby.IPBanCore
             {
                 if (logMissing)
                 {
-                    Logger.Warn("Ignoring key {0}, not found in appSettings", key);
+                    Logger.Debug("Ignoring key {0}, not found in appSettings", key);
                 }
                 return null; // skip trying to convert
             }
@@ -387,22 +393,64 @@ namespace DigitalRuby.IPBanCore
                 string[] pieces = firewallRuleString.Split(';');
                 if (pieces.Length == 5)
                 {
+                    // Safely parse IP ranges, allowing empty IP section
+                    List<IPAddressRange> ipRanges = [];
+                    if (!string.IsNullOrWhiteSpace(pieces[2]))
+                    {
+                        foreach (var token in pieces[2].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            try
+                            {
+                                ipRanges.Add(IPAddressRange.Parse(token));
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Warn("Ignoring invalid ip range '{0}' in FirewallRules entry '{1}': {2}", token, firewallRuleString, ex.Message);
+                            }
+                        }
+                    }
+
+                    // Safely parse port ranges, allowing empty ports section
+                    List<PortRange> allowPorts = [];
+                    if (!string.IsNullOrWhiteSpace(pieces[3]))
+                    {
+                        foreach (var token in pieces[3].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            try
+                            {
+                                var pr = PortRange.Parse(token);
+                                if (pr.MinPort >= 0)
+                                {
+                                    allowPorts.Add(pr);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Warn("Ignoring invalid port range '{0}' in FirewallRules entry '{1}': {2}", token, firewallRuleString, ex.Message);
+                            }
+                        }
+                    }
+
                     IPBanFirewallRule firewallRuleObj = new()
                     {
                         Block = (pieces[1].Equals("block", StringComparison.OrdinalIgnoreCase)),
-                        IPAddressRanges = pieces[2].Split(',').Select(p => IPAddressRange.Parse(p)).ToList(),
+                        IPAddressRanges = ipRanges,
                         Name = "EXTRA_" + pieces[0].Trim(),
-                        AllowPortRanges = pieces[3].Split(',').Select(p => PortRange.Parse(p)).Where(p => p.MinPort >= 0).ToList(),
-                        PlatformRegex = new Regex(pieces[4].Replace('*', '.'), RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                        AllowPortRanges = allowPorts
                     };
-                    if (firewallRuleObj.PlatformRegex.IsMatch(OSUtility.Name))
+                    if (!string.IsNullOrWhiteSpace(pieces[4]))
+                    {
+                        firewallRuleObj.PlatformRegex = new Regex(pieces[4].Replace('*', '.'), RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+                    }
+                    if (firewallRuleObj.PlatformRegex is null ||
+                        firewallRuleObj.PlatformRegex.IsMatch(OSUtility.Name))
                     {
                         extraRules.Add(firewallRuleObj);
                     }
                 }
                 else
                 {
-                    Logger.Warn("Firewall block rule entry should have 5 comma separated pieces: name;block/allow;ips;ports;platform_regex. Invalid entry: {0}", firewallRuleString);
+                    Logger.Warn("Firewall block rule entry should have comma separated pieces: name;block/allow;ips;ports;platform_regex. Invalid entry: {0}", firewallRuleString);
                 }
             }
         }
@@ -596,7 +644,7 @@ namespace DigitalRuby.IPBanCore
             foreach (string userNameToCheckAgainst in userNameWhitelist)
             {
                 int distance = LevenshteinUnsafe.Distance(userName, userNameToCheckAgainst);
-                if (distance <= userNameWhitelistMaximumEditDistance)
+                if (distance >= 0 && distance <= userNameWhitelistMaximumEditDistance)
                 {
                     return true;
                 }
@@ -1109,6 +1157,14 @@ namespace DigitalRuby.IPBanCore
         /// A url to get when the service updates, empty for none. See ReplaceUrl of IPBanService for place-holders.
         /// </summary>
         public string GetUrlUpdate { get { return getUrlUpdate; } }
+
+        /// <summary>
+        /// Expected SHA-256 hash (hex, case-insensitive) of the binary returned by GetUrlUpdate.
+        /// If empty, the auto-update download is fetched but NOT executed — this is the safe default
+        /// and protects against a malicious/MITMed update server. Operators must explicitly set this
+        /// hash to opt in to automated update execution.
+        /// </summary>
+        public string GetUrlUpdateSha256 { get { return getUrlUpdateSha256; } }
 
         /// <summary>
         /// A url to get when the service starts, empty for none. See ReplaceUrl of IPBanService for place-holders.

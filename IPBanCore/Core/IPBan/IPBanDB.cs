@@ -139,18 +139,24 @@ namespace DigitalRuby.IPBanCore
         /// </summary>
         public static IPAddressEntry ParseIPAddressEntry(SqliteDataReader reader)
         {
-            string ipAddress = reader.GetString(0);
-            long lastFailedLogin = reader.GetInt64(1);
-            long failedLoginCount = reader.GetInt64(2);
+            // Older DB schemas (created before BanEndDate / UserName / Source columns were added)
+            // can return NULL even though the column declarations now have defaults — read with
+            // IsDBNull guards so a stale schema doesn't crash every query that hits a legacy row.
+            string ipAddress = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+            long lastFailedLogin = reader.IsDBNull(1) ? 0L : reader.GetInt64(1);
+            long failedLoginCount = reader.IsDBNull(2) ? 0L : reader.GetInt64(2);
             object banDateObj = reader.GetValue(3);
-            IPAddressState state = (IPAddressState)(int)reader.GetInt32(4);
+            IPAddressState state = reader.IsDBNull(4) ? IPAddressState.Active : (IPAddressState)(int)reader.GetInt32(4);
             object banEndDateObj = reader.GetValue(5);
-            string userName = reader.GetString(6);
-            string source = reader.GetString(7);
+            string userName = reader.IsDBNull(6) ? string.Empty : reader.GetString(6);
+            string source = reader.IsDBNull(7) ? string.Empty : reader.GetString(7);
             long banDateLong = GetInt64(banDateObj);
             long banEndDateLong = GetInt64(banEndDateObj);
             DateTime? banDate = (banDateLong == 0 ? (DateTime?)null : banDateLong.ToDateTimeUnixMilliseconds());
-            DateTime? banEndDate = (banDateLong == 0 ? (DateTime?)null : banEndDateLong.ToDateTimeUnixMilliseconds());
+            // Each ban-date column is independent: BanDate may be set while BanEndDate is NULL
+            // (legacy rows from before BanEndDate existed, or in-flight transitions). Each guard
+            // must check its own column.
+            DateTime? banEndDate = (banEndDateLong == 0 ? (DateTime?)null : banEndDateLong.ToDateTimeUnixMilliseconds());
             DateTime lastFailedLoginDt = lastFailedLogin.ToDateTimeUnixMilliseconds();
             return new IPAddressEntry
             {
@@ -214,11 +220,12 @@ namespace DigitalRuby.IPBanCore
         /// Delete all data from the database but keep the database file
         /// </summary>
         /// <param name="confirm">Pass true to actually truncate</param>
-        public void Truncate(bool confirm)
+        /// <param name="onlyBans">Delete only bans (true) or everything (false)</param>
+        public void Truncate(bool confirm, bool onlyBans = false)
         {
             if (confirm)
             {
-                ExecuteNonQuery("DELETE FROM IPAddresses");
+                ExecuteNonQuery("DELETE FROM IPAddresses" + (onlyBans ? " WHERE State IN (0, 1)" : string.Empty));
             }
         }
 

@@ -10,6 +10,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace DigitalRuby.IPBanCore
@@ -17,8 +19,39 @@ namespace DigitalRuby.IPBanCore
     /// <summary>
     /// Represents a consecutive range of ip addresses
     /// </summary>
+    [JsonConverter(typeof(IPAddressRangeJsonConverter))]
     public sealed class IPAddressRange : IEnumerable<IPAddress>, IReadOnlyDictionary<string, string>, IComparable<IPAddressRange>
     {
+        /// <summary>
+        /// Converter for System.Text.Json to serialize IPAddressRange as a string (CIDR or Range)
+        /// </summary>
+        public sealed class IPAddressRangeJsonConverter : JsonConverter<IPAddressRange>
+        {
+            /// <inheritdoc />
+            public override IPAddressRange Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType == JsonTokenType.String)
+                {
+                    string s = reader.GetString();
+                    return Parse(s);
+                }
+
+                // If we get here, the JSON token wasn't a string (e.g. it was an object or array)
+                // Returning null or throwing is the standard behavior.
+                throw new JsonException($"Expected string token for IPAddressRange, got {reader.TokenType}");
+            }
+
+            /// <inheritdoc />
+            public override void Write(Utf8JsonWriter writer, IPAddressRange value, JsonSerializerOptions options)
+            {
+                if (value is not null && value.Begin is not null && value.End is not null)
+                {
+                    // ToString() automatically handles CIDR or Range formatting
+                    writer.WriteStringValue(value.ToString());
+                }
+            }
+        }
+
         private static class Bits
         {
             public static bool ValidateSubnetMaskIsLinear(byte[] maskBytes, string ipRangeString, bool throwException)
@@ -377,37 +410,37 @@ namespace DigitalRuby.IPBanCore
             }
             else if (cmpLeft > 0 && cmpRight < 0)
             {
-                // middle chomp, left and right will be set
-                if (!range.Begin.TryDecrement(out IPAddress end))
+                // Middle chomp — both sides have remainder, except at the IP space boundaries
+                // (0.0.0.0 / ::, 255.255.255.255 / ffff:…) where decrement/increment legitimately
+                // has no representable result. In those cases the corresponding side stays null.
+                if (range.Begin.TryDecrement(out IPAddress end))
                 {
-                    throw new ApplicationException("Unexpected failed decrement of " + range.Begin);
+                    left = new IPAddressRange(Begin, end);
                 }
-                left = new IPAddressRange(Begin, end);
-                if (!range.End.TryIncrement(out IPAddress start))
+                if (range.End.TryIncrement(out IPAddress start))
                 {
-                    throw new ApplicationException("Unexpected failed increment of " + range.End);
+                    right = new IPAddressRange(start, End);
                 }
-                right = new IPAddressRange(start, End);
                 return true;
             }
             else if (cmpRight < 0 && range.End.CompareTo(Begin) >= 0)
             {
                 // chomp with only right piece remaining
-                if (!range.End.TryIncrement(out IPAddress start))
+                if (range.End.TryIncrement(out IPAddress start))
                 {
-                    throw new ApplicationException("Unexpected failed increment of " + range.End);
+                    right = new IPAddressRange(start, End);
                 }
-                right = new IPAddressRange(start, End);
+                // if increment fails (range.End == max IP), there is no right piece — still a valid chomp
                 return true;
             }
             else if (cmpLeft > 0 && range.Begin.CompareTo(End) <= 0)
             {
                 // chomp with only left piece remaining
-                if (!range.Begin.TryDecrement(out IPAddress end))
+                if (range.Begin.TryDecrement(out IPAddress end))
                 {
-                    throw new ApplicationException("Unexpected failed decrement of " + range.Begin);
+                    left = new IPAddressRange(Begin, end);
                 }
-                left = new IPAddressRange(Begin, end);
+                // if decrement fails (range.Begin == 0.0.0.0 / ::), there is no left piece
                 return true;
             }
 
@@ -868,7 +901,7 @@ namespace DigitalRuby.IPBanCore
         bool IReadOnlyDictionary<string, string>.TryGetValue(string key, out string value) => TryGetValue(key, out value);
 
         /// <inheritdoc />
-        IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator() => (IEnumerator<KeyValuePair<string, string>>)GetDictionaryItems().GetEnumerator();
+        IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator() => ((IEnumerable<KeyValuePair<string, string>>)GetDictionaryItems()).GetEnumerator();
 
         /// <summary>
         /// Compare to another ip address range

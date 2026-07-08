@@ -79,9 +79,9 @@ namespace DigitalRuby.IPBanTests
                 ],
                 [
                     "/var/log/ipbancustom*.log",
-                    @"(?<timestamp>\d\d\d\d-\d\d-\d\d\s\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?(?<log>ipban\sfailed\slogin),\sip\saddress:\s(?<ipaddress>[^,\n]+),\ssource:\s(?<source>[^,\n]+)?,\suser:\s(?<username>[^\s,]+)?",
+                    @"(?<timestamp>\d\d\d\d-\d\d-\d\d[\st]\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?(?<log>ipban\sfailed\slogin),\sip\saddress:\s(?<ipaddress>[^,\n]+),\ssource:\s(?<source>[^,\n]+)?,\suser:\s(?<username>[^\s,]+)?",
                     @"",
-                    @"(?<timestamp>\d\d\d\d-\d\d-\d\d\s\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?ipban\ssuccess\slogin,\sip\saddress:\s(?<ipaddress>[^,\n]+),\ssource:\s(?<source>[^,\n]+)?,\suser:\s(?<username>[^\s,]+)?",
+                    @"(?<timestamp>\d\d\d\d-\d\d-\d\d[\st]\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?ipban\ssuccess\slogin,\sip\saddress:\s(?<ipaddress>[^,\n]+),\ssource:\s(?<source>[^,\n]+)?,\suser:\s(?<username>[^\s,]+)?",
                     @"",
                     "Linux", "IPBanCustom", null
                 ],
@@ -103,7 +103,7 @@ namespace DigitalRuby.IPBanTests
                 ],
                 [
                     "C:/Program Files (x86)/Mail Enable/Logging/SMTP/SMTP-Activity-*.log\nC:/Program Files/Mail Enable/Logging/SMTP/SMTP-Activity-*.log\nC:/Program Files (x86)/Mail Enable/Logging/IMAP\nC:/Program Files/Mail Enable/Logging/IMAP",
-                    @"^(?<timestamp>[0-9\/:\s]+)SMTP\-IN\s+[^\s]+\s+[^\s]+\s(?<ipaddress>[^\s]+)\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+(?<log>Invalid\sUsername\sor\sPassword)\s+[^\s]+\s+[^\s]+\s+(?<username>[^\n]+)$|^(?<timestamp>[0-9\/:\s]+)IMAP\-IN\s+[^\s]+\s+(?<ipaddress>[^\s]+)\s+LOGIN\s+LOGIN\s+""(?<username>[^""]+)""\s+""[^""]+""\s+[^\s]+\s+NO\s+LOGIN\s+Failed\s+[^\s]+\s+(?<log>Invalid\s+username\s+or\s+password)[^\n]*$|^(?<timestamp>[0-9\/]+\s[0-9\:]+)\sSMTP\-IN\s[^\s]+\s[^\s]+\s(?<ipaddress>[^\s]+)\s[^\s]+\s[^\s]+\sTO\:(?<username>[^\s]+)\s[^\s]+\sthis\smail\sserver\srequires\sauthentication\swhen\sattempting\sto\ssend\sto\sa\snon-local\se-mail\saddress[^\n]+\n$",
+                    @"^(?<timestamp>[0-9\/:\s]+)SMTP\-IN\s+[^\s]+\s+[^\s]+\s(?<ipaddress>[^\s]+)\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+(?<log>Invalid\sUsername\sor\sPassword)\s+[^\s]+\s+[^\s]+\s+(?<username>[^\n]+)$|^(?<timestamp>[0-9\/:\s]+)IMAP\-IN\s+[^\s]+\s+(?<ipaddress>[^\s]+)\s+LOGIN\s+LOGIN\s+""(?<username>[^""]+)""\s+""[^""]+""\s+[^\s]+\s+NO\s+LOGIN\s+Failed\s+[^\s]+\s+(?<log>Invalid\s+username\s+or\s+password)[^\n]*$|^(?<timestamp>[0-9\/:\s]+)\sSMTP\-IN\s[^\s]+\s[^\s]+\s(?<ipaddress>[^\s]+)\s[^\s]+\s[^\s]+\sTO\:(?<username>[^\s]+)\s[^\s]+\sthis\smail\sserver\srequires\sauthentication\swhen\sattempting\sto\ssend\sto\sa\snon-local\se-mail\saddress[^\n]+$|^(?<timestamp>[0-9\/:\s]+)\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+(?<ipaddress>[^\s]+)\s+.*\sdenied\saccess\s+[^\n]+$",
                     @"MM/dd/yy HH:mm:ss",
                     @"",
                     @"",
@@ -127,9 +127,9 @@ namespace DigitalRuby.IPBanTests
                 ],
                 [
                     "C:/IPBanCustomLogs/**/*.log",
-                    @"(?<timestamp>\d\d\d\d-\d\d-\d\d\s\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?(?<log>ipban\sfailed\slogin),\sip\saddress:\s(?<ipaddress>[^,\n]+),\ssource:\s(?<source>[^,\n]+)?,\suser:\s(?<username>[^\s,]+)?",
+                    @"(?<timestamp>\d\d\d\d-\d\d-\d\d[\st]\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?(?<log>ipban\sfailed\slogin),\sip\saddress:\s(?<ipaddress>[^,\n]+),\ssource:\s(?<source>[^,\n]+)?,\suser:\s(?<username>[^\s,]+)?",
                     @"",
-                    @"(?<timestamp>\d\d\d\d-\d\d-\d\d\s\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?ipban\ssuccess\slogin,\sip\saddress:\s(?<ipaddress>[^,\n]+),\ssource:\s(?<source>[^,\n]+)?,\suser:\s(?<username>[^\s,]+)?",
+                    @"(?<timestamp>\d\d\d\d-\d\d-\d\d[\st]\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?ipban\ssuccess\slogin,\sip\saddress:\s(?<ipaddress>[^,\n]+),\ssource:\s(?<source>[^,\n]+)?,\suser:\s(?<username>[^\s,]+)?",
                     @"",
                     "Windows", "IPBanCustom", null
                 ]
@@ -192,9 +192,9 @@ namespace DigitalRuby.IPBanTests
             List<EventViewerExpressionGroup> groups = cfg.WindowsEventViewerExpressionsToBlock.Groups;
             ClassicAssert.NotNull(groups);
             ClassicAssert.AreEqual(groupCount, groups.Count);
-            AssertEventViewerGroup(groups[i++], "0x8010000000000000", minimumWindowsMajorVersion, 0, false, "Security", "RDP", "//EventID", "^(?<log>4625|6273)$", "//Data[@Name='IpAddress' or @Name='Workstation' or @Name='SourceAddress' or @Name='ClientIPAddress']", "(?<ipaddress>.+)", "//Data[@Name='ProcessName']", "(?<source_IIS>c:\\\\Windows\\\\System32\\\\inetsrv\\\\w3wp.exe)?$");
+            AssertEventViewerGroup(groups[i++], "0x8010000000000000", minimumWindowsMajorVersion, 0, false, "Security", "RDP", "//EventID", "^(?<log>4625|4768|6273)$", "//Data[@Name='IpAddress' or @Name='Workstation' or @Name='SourceAddress' or @Name='ClientIPAddress']", "(?<ipaddress>.+)", "//Data[@Name='ProcessName']", "(?<source_IIS>c:\\\\Windows\\\\System32\\\\inetsrv\\\\w3wp.exe)?$");
             AssertEventViewerGroup(groups[i++], "0x8010000000000000", minimumWindowsMajorVersion, 0, false, "Security", "RDP", "//EventID", "^(?<log>4653)$", "//Data[@Name='FailureReason']", ".", "//Data[@Name='RemoteAddress']", "(?<ipaddress>.+)");
-            AssertEventViewerGroup(groups[i++], "0x80000000000000", minimumWindowsMajorVersion, 0, false, "Application", "IPBanCustom", "//Data", @"(?<timestamp>\d\d\d\d-\d\d-\d\d\s\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?(?<log>ipban\sfailed\slogin),\sip\saddress:\s(?<ipaddress>[^,]+),\ssource:\s(?<source>[^,]+)?,\suser:\s(?<username>[^\s,]+)?");
+            AssertEventViewerGroup(groups[i++], "0x80000000000000", minimumWindowsMajorVersion, 0, false, "Application", "IPBanCustom", "//Data", @"(?<timestamp>\d\d\d\d-\d\d-\d\d[\st]\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?(?<log>ipban\sfailed\slogin),\sip\saddress:\s(?<ipaddress>[^,]+),\ssource:\s(?<source>[^,]+)?,\suser:\s(?<username>[^\s,]+)?");
             AssertEventViewerGroup(groups[i++], "0x90000000000000", minimumWindowsMajorVersion, 0, false, "Application", "MSSQL", "//Provider[contains(@Name,'MSSQL')]", string.Empty, "//EventID", "^(?<log>18456)$", "(//Data)[1]", "^(?<username>.+)$", "(//Data)[2]", @"^(?:(?!Reason:\sFailed\sto\sopen\sthe(?:\sexplicitly\sspecified)?\sdatabase)(?:.))+$", "(//Data)[3]", @"\[CLIENTE?\s?:\s?(?<ipaddress>[^\]]+)\]");
             AssertEventViewerGroup(groups[i++], "0x80000000000000", minimumWindowsMajorVersion, 0, false, "Application", "MySQL", "//Provider[@Name='MySQL' or @Name='MariaDB']", string.Empty, "//Data", "(?<log>Access denied for user) '?(?<username>[^']+)'@'(?<ipaddress>[^']+)'");
             AssertEventViewerGroup(groups[i++], "0x80000000000000", minimumWindowsMajorVersion, 0, false, "Application", "PostgreSQL", "//Provider[@Name='PostgreSQL']", string.Empty, "//Data", "host=(?<ipaddress>[^ ]+)");
@@ -216,7 +216,7 @@ namespace DigitalRuby.IPBanTests
             AssertEventViewerGroup(groups[i++], "0x1000000000000000", minimumWindowsMajorVersion, 0, true, "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational", "RDP", "//EventID", "^(?<log>25)$", "//Address", "(?<ipaddress>.+)", "//User", "(?<username>[^\\\\\\/]+)$");
             AssertEventViewerGroup(groups[i++], "0x4020000001000000", minimumWindowsMajorVersion, 0, true, "Microsoft-Windows-TerminalServices-Gateway/Operational", "RDP", "//EventID", "^(?<log>200)$", "//IpAddress", "(?<ipaddress>.+)", "//Username", "(?<username>[^\\\\\\/]+)$", "//AuthType", "NTLM");
             AssertEventViewerGroup(groups[i++], "0x4000000000000000", minimumWindowsMajorVersion, 0, true, "OpenSSH/Operational", "SSH", "//Data[@Name='payload']", @"Accepted\s+(?:password|publickey)\s+for\s+(?<username>[^\s]+)\s+from\s+(?<ipaddress>[^\s]+)\s+port\s+[0-9]+\s+ssh");
-            AssertEventViewerGroup(groups[i++], "0x80000000000000", minimumWindowsMajorVersion, 0, true, "Application", "IPBanCustom", "//Data", @"(?<timestamp>\d\d\d\d-\d\d-\d\d\s\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?ipban\ssuccess\slogin,\sip\saddress:\s(?<ipaddress>[^,]+),\ssource:\s(?<source>[^,]+)?,\suser:\s(?<username>[^\s,]+)?");
+            AssertEventViewerGroup(groups[i++], "0x80000000000000", minimumWindowsMajorVersion, 0, true, "Application", "IPBanCustom", "//Data", @"(?<timestamp>\d\d\d\d-\d\d-\d\d[\st]\d\d:\d\d:\d\d(?:\.\d+)?Z?)?(?:,\s)?ipban\ssuccess\slogin,\sip\saddress:\s(?<ipaddress>[^,]+),\ssource:\s(?<source>[^,]+)?,\suser:\s(?<username>[^\s,]+)?");
             AssertEventViewerGroup(groups[i++], "0x80000000000000", minimumWindowsMajorVersion, 0, true, "Application", "VNC", "//EventID", "^257$", "//Data", @"Authentication\spassed\sby\s(?<ipaddress>.+)");
             AssertEventViewerGroup(groups[i++], "0x8020000000000000", minimumWindowsMajorVersion, 0, true, "System", "RRAS", "//EventID", "^6272$", "//Data[@Name='SubjectUserName']", @"(?<username>[^\\\/]+)$", "//Data[@Name='CallingStationID']", "(?<ipaddress>.+)", "//Data[@Name='EAPType']", "\\s?secured\\spassword\\s?");
             AssertEventViewerGroup(groups[i++], "0xa0000000000000", minimumWindowsMajorVersion, 0, true, "Application", "MSSQL", "//Provider[contains(@Name,'MSSQL')]", string.Empty, "//EventID", "^(?<log>18454)$", "(//Data)[1]", "^(?<username>.+)$", "(//Data)[2]", @"\[CLIENTE?\s?:\s?(?<ipaddress>[^\]]+)\]");
@@ -247,6 +247,7 @@ namespace DigitalRuby.IPBanTests
                 ClassicAssert.IsEmpty(cfg.ProcessToRunOnBan);
                 ClassicAssert.IsEmpty(cfg.ProcessToRunOnSuccessfulLogin);
                 ClassicAssert.IsEmpty(cfg.ProcessToRunOnUnban);
+                ClassicAssert.IsEmpty(cfg.GetUrlUpdateSha256);
                 ClassicAssert.IsFalse(cfg.ResetFailedLoginCountForUnbannedIPAddresses);
                 ClassicAssert.IsTrue(cfg.UseDefaultBannedIPAddressHandler);
                 ClassicAssert.AreEqual(cfg.TruncateUserNameChars, "@");
@@ -268,6 +269,20 @@ namespace DigitalRuby.IPBanTests
             {
                 IPBanService.DisposeIPBanTestService(service);
             }
+        }
+
+        [Test]
+        public void UserNameWhitelist_OverlongUserNameDoesNotMatchDistanceSentinel()
+        {
+            IPBanConfig cfg = IPBanConfig.LoadFromXml(
+                "<?xml version='1.0'?><configuration><appSettings>" +
+                "<add key='UserNameWhitelist' value='admin' />" +
+                "<add key='UserNameWhitelistMinimumEditDistance' value='2' />" +
+                "</appSettings></configuration>");
+            string tooLong = new string('a', LevenshteinUnsafe.MaxInputLength + 1);
+
+            ClassicAssert.IsFalse(cfg.IsUserNameWithinMaximumEditDistanceOfUserNameWhitelist(tooLong, out bool hasUserNameWhitelist));
+            ClassicAssert.IsTrue(hasUserNameWhitelist);
         }
 
         /// <summary>
@@ -450,6 +465,42 @@ e.g.
         Task<string> IDnsLookup.GetHostNameAsync(string hostNameOrAddress)
         {
             throw new NotImplementedException();
+        }
+    }
+    [TestFixture]
+    public class IPBanConfigFirewallRuleTests
+    {
+        [Test]
+        public void TestFirewallRules_EmptyIpSection_NoCrash()
+        {
+            // name;allow/block;ips;ports;platform_regex
+            // Use ".*" for the platform regex so the test passes on every OS — the previous
+            // value "Windows" caused IPBanConfig.ParseExtraFirewallRules to filter both rules
+            // out on Linux/macOS test runs (production code does this on purpose; the rule
+            // entry's platform field is honored). The point of this test is to verify the
+            // parser tolerates an empty IP section, not to test platform filtering.
+            string configXml = "<?xml version='1.0'?><configuration><appSettings>" +
+                "<add key='FirewallRules' value='MyRule;block;;22-80;.*\nMyRule2;allow;1.2.3.4;;.*' />" +
+                "</appSettings></configuration>";
+            var cfg = IPBanConfig.LoadFromXml(configXml);
+
+            // Should parse two extra rules
+            ClassicAssert.AreEqual(2, cfg.ExtraRules.Count);
+
+            // First rule has no ips and some ports, should be accepted but contain zero ip ranges
+            var r1 = cfg.ExtraRules[0];
+            ClassicAssert.IsTrue(r1.Block);
+            ClassicAssert.AreEqual("EXTRA_MyRule", r1.Name);
+            ClassicAssert.AreEqual(0, r1.IPAddressRanges.Count);
+            ClassicAssert.IsTrue(r1.AllowPortRanges.Count >=1);
+
+            // Second rule has one ip and empty ports
+            var r2 = cfg.ExtraRules[1];
+            ClassicAssert.IsFalse(r2.Block);
+            ClassicAssert.AreEqual("EXTRA_MyRule2", r2.Name);
+            ClassicAssert.AreEqual(1, r2.IPAddressRanges.Count);
+            ClassicAssert.AreEqual("1.2.3.4", r2.IPAddressRanges.First().ToString());
+            ClassicAssert.AreEqual(0, r2.AllowPortRanges.Count);
         }
     }
 }

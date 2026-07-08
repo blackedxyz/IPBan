@@ -57,7 +57,6 @@ namespace DigitalRuby.IPBanCore
         /// <inheritdoc />
         public Task Update(CancellationToken cancelToken)
         {
-            UpdateLogFiles(service.Config);
             if (service.ManualCycle)
             {
                 foreach (var scanner in logsToParse)
@@ -118,7 +117,8 @@ namespace DigitalRuby.IPBanCore
                             FailedLoginThreshold = newFile.FailedLoginThreshold,
                             FailedLogLevel = newFile.FailedLoginLogLevel,
                             SuccessfulLogLevel = newFile.SuccessfulLoginLogLevel,
-                            NotificationFlags = newFile.NotificationFlags
+                            NotificationFlags = newFile.NotificationFlags,
+                            Description = newFile.Description
                         };
 
                         // if we have an existing log file scanner, but it does not match the new configuration, remove the old log file scanner
@@ -128,7 +128,7 @@ namespace DigitalRuby.IPBanCore
                             if (existingScanner.PathAndMask == options.PathAndMask)
                             {
                                 // the existing scanner will get replaced, but we notify the user so they can fix the issue
-                                Logger.Error("Multiple log file scanners detected with identical path and mask {0}. Use junctions if you need multiple log file scanners on the same directory.", existingScanner.PathAndMask);
+                                Logger.Info("Multiple log file scanners detected with identical path and mask {0}. Use junctions if you need multiple log file scanners on the same directory.", existingScanner.PathAndMask);
                             }
 
                             // TODO: Add unit/integration test for this case
